@@ -5,7 +5,9 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-dataset_path = Path("data/prepared_dataset.npz")
+Path("models").mkdir(exist_ok=True)
+
+dataset_path = Path("data/augmented_dataset.npz")
 
 with np.load(dataset_path) as data:
     X_train = data["X_train"]
@@ -76,12 +78,27 @@ model.compile(
     metrics=["accuracy"]
 )
 
+checkpoint = keras.callbacks.ModelCheckpoint(
+    filepath="models/best_music_genre_model_v3.keras",
+    monitor="val_loss",
+    save_best_only=True,
+    verbose=1
+)
+
+early_stopping = keras.callbacks.EarlyStopping(
+    monitor="val_loss",
+    patience=12,
+    restore_best_weights=True,
+    verbose=1
+)
+
 history = model.fit(
     X_train, 
     y_train,
     validation_data=(X_val, y_val),
-    epochs=30,
-    batch_size=32
+    epochs=150,
+    batch_size=32,
+    callbacks=[checkpoint, early_stopping]
 )
 
 print("\nFinal training results:")
@@ -90,3 +107,26 @@ print("Training Accuracy:", history.history["accuracy"][-1])
 print("Validation Accuracy:", history.history["val_accuracy"][-1])
 print("Training Loss:", history.history["loss"][-1])
 print("Validation Loss:", history.history["val_loss"][-1])
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+plt.plot(history.history["accuracy"], label="Training Accuracy")
+plt.plot(history.history["val_accuracy"], label="Validation Accuracy")
+plt.title("Model Accuracy")
+plt.xlabel("Epochs")
+plt.ylabel("Accuracy")
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(history.history["loss"], label="Training Loss")
+plt.plot(history.history["val_loss"], label="Validation Loss")
+plt.title("Model Loss")
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.legend()
+
+plt.tight_layout()
+plt.show()

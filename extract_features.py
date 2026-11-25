@@ -43,7 +43,7 @@ for index, row in df.iterrows():
         n_mels=128
     )
 
-    mel_db = librosa.power_to_db(mel, ref=np.max)
+    mel_db = librosa.power_to_db(mel, ref=np.max, top_db=80)
 
     features.append(mel_db)
     labels.append(genre)
